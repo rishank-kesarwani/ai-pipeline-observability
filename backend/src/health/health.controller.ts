@@ -1,15 +1,31 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Head } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Public } from '../common/decorators';
 import { MemoryStoreService } from '../database/memory-store.service';
 
 @ApiTags('Health & Observability')
-@Controller('health')
+@Controller()
 export class HealthController {
   constructor(private readonly memoryStore: MemoryStoreService) {}
 
   @Public()
   @Get()
+  @Head()
+  @ApiOperation({ summary: 'Root service information & entrypoint' })
+  getRoot() {
+    return {
+      status: 'UP',
+      service: 'ai-pipeline-observability',
+      description: 'AI Pipeline Observability, Failure Forensics & Recovery Platform',
+      version: '1.0.0',
+      docs: '/api/docs',
+      health: '/health',
+    };
+  }
+
+  @Public()
+  @Get('health')
+  @Head('health')
   @ApiOperation({ summary: 'Platform health and service dependency statuses' })
   getHealth() {
     const memory = process.memoryUsage();

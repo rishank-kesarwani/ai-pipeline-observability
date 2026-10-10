@@ -54,9 +54,9 @@ async function bootstrap() {
     ],
   });
 
-  // Global Prefix (exclude health checks)
+  // Global Prefix (exclude root and health checks)
   app.setGlobalPrefix('api/v1', {
-    exclude: ['health', 'health/live', 'health/ready'],
+    exclude: ['', '/', 'health', 'health/live', 'health/ready'],
   });
 
   // Global Validation Pipe
