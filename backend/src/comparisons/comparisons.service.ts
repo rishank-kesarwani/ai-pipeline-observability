@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Execution, ExecutionDocument } from '../database/schemas/execution.schema';
@@ -52,7 +52,7 @@ export class ComparisonsService {
     private readonly memoryStore: MemoryStoreService,
   ) {}
 
-  async compareRuns(baseRunId: string, targetRunId: string): Promise<RunComparisonResult> {
+  async compareRuns(baseRunId: string, targetRunId: string, user?: any): Promise<RunComparisonResult> {
     const [baseExecution, targetExecution] = await Promise.all([
       this.findExecution(baseRunId),
       this.findExecution(targetRunId),
@@ -63,6 +63,24 @@ export class ComparisonsService {
     }
     if (!targetExecution) {
       throw new NotFoundException(`Target execution '${targetRunId}' not found`);
+    }
+
+    const baseTenant = baseExecution.tenantId || 'default';
+    const targetTenant = targetExecution.tenantId || 'default';
+
+    if (!user || user.isAnonymous) {
+      if (baseTenant !== 'default' || targetTenant !== 'default') {
+        throw new ForbiddenException(
+          'Anonymous visitors are restricted to comparing public demo executions. Please sign in.',
+        );
+      }
+    } else if (!user.roles?.includes('admin') && !user.roles?.includes('operator')) {
+      if (
+        (baseTenant !== user.tenantId && baseTenant !== 'default') ||
+        (targetTenant !== user.tenantId && targetTenant !== 'default')
+      ) {
+        throw new ForbiddenException('Access denied to compare private tenant executions');
+      }
     }
 
     const [baseSteps, targetSteps] = await Promise.all([

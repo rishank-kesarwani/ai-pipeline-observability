@@ -3,6 +3,12 @@ import { SetMetadata, createParamDecorator, ExecutionContext } from '@nestjs/com
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
+export const IS_OPTIONAL_AUTH_KEY = 'isOptionalAuth';
+export const OptionalAuth = () => SetMetadata(IS_OPTIONAL_AUTH_KEY, true);
+
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+
 export interface RequestUser {
   userId: string;
   email?: string;

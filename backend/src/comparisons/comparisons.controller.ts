@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ComparisonsService } from './comparisons.service';
-import { Public } from '../common/decorators';
+import { OptionalAuth, CurrentUser } from '../common/decorators';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 
 @ApiTags('Run Comparisons & Diff')
@@ -10,7 +10,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 export class ComparisonsController {
   constructor(private readonly comparisonsService: ComparisonsService) {}
 
-  @Public()
+  @OptionalAuth()
   @Get()
   @ApiOperation({
     summary: 'Compare two execution runs side-by-side with step divergence and metrics diff',
@@ -20,7 +20,8 @@ export class ComparisonsController {
   async compareRuns(
     @Query('baseRunId') baseRunId: string,
     @Query('targetRunId') targetRunId: string,
+    @CurrentUser() user: any,
   ) {
-    return this.comparisonsService.compareRuns(baseRunId, targetRunId);
+    return this.comparisonsService.compareRuns(baseRunId, targetRunId, user);
   }
 }

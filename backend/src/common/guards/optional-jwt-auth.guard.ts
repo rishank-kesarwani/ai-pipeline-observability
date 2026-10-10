@@ -2,7 +2,7 @@ import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/com
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { IS_PUBLIC_KEY } from '../decorators';
+import { IS_PUBLIC_KEY, IS_OPTIONAL_AUTH_KEY } from '../decorators';
 
 @Injectable()
 export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
@@ -19,46 +19,86 @@ export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
 
+    // 1. Strictly public routes (health, auth endpoints) always bypass auth
+    if (isPublic) {
+      return true;
+    }
+
+    const isOptionalAuth = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_AUTH_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
     const publicAccessEnabled = this.configService.get<boolean>(
       'app.publicAccessEnabled',
       true,
     );
 
-    // If marked public or demo mode is on, attempt auth but do not fail if unauthenticated
-    if (isPublic || publicAccessEnabled) {
-      try {
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers?.authorization;
+
+    // 2. If route is @OptionalAuth and public access is enabled:
+    if (isOptionalAuth && publicAccessEnabled) {
+      // If client provided a Bearer token, attempt verification
+      if (authHeader) {
         return super.canActivate(context);
-      } catch {
-        return true;
       }
+      // If no token provided, allow anonymous activation
+      return true;
     }
 
+    // 3. In all other cases (including @OptionalAuth when publicAccessEnabled=false),
+    // require standard JWT authentication
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, _info: any, context: ExecutionContext) {
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+    if (isPublic) {
+      return user || null;
+    }
+
+    const isOptionalAuth = this.reflector.getAllAndOverride<boolean>(IS_OPTIONAL_AUTH_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
     const publicAccessEnabled = this.configService.get<boolean>(
       'app.publicAccessEnabled',
       true,
     );
 
-    if (user) return user;
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers?.authorization;
 
-    if (isPublic || publicAccessEnabled) {
+    // If a token was provided but is invalid or expired, reject regardless of public mode
+    if (authHeader && (err || !user)) {
+      throw new UnauthorizedException('Authentication token is missing or invalid');
+    }
+
+    if (user) {
+      return user;
+    }
+
+    // If optional auth and public access is enabled: allow guest
+    if (isOptionalAuth && publicAccessEnabled) {
       return {
-        userId: 'anonymous-operator',
+        userId: 'anonymous-guest',
         name: 'Demo Visitor',
-        email: 'demo@observability.local',
-        roles: ['anonymous', 'viewer'],
+        email: 'guest@observability.local',
+        roles: ['guest', 'viewer'],
         tenantId: 'default',
         isAnonymous: true,
       };
     }
 
-    throw err || new UnauthorizedException('Authentication required');
+    if (isOptionalAuth && !publicAccessEnabled) {
+      throw new UnauthorizedException('Public demo access is disabled. Please sign in to access telemetry data.');
+    }
+
+    throw err || new UnauthorizedException('Authentication token is missing or invalid');
   }
 }

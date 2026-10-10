@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { FailuresService } from './failures.service';
 import { FailureCategory } from '../common/types';
-import { Public } from '../common/decorators';
+import { OptionalAuth } from '../common/decorators';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 
 @ApiTags('Failure Forensics & Clustering')
@@ -11,7 +11,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 export class FailuresController {
   constructor(private readonly failuresService: FailuresService) {}
 
-  @Public()
+  @OptionalAuth()
   @Get('clusters')
   @ApiOperation({
     summary: 'List aggregated failure clusters grouped by normalized error signatures',
@@ -26,7 +26,7 @@ export class FailuresController {
     });
   }
 
-  @Public()
+  @OptionalAuth()
   @Get('clusters/:hash')
   @ApiOperation({
     summary: 'Get details, root-cause hypotheses, and sample runs for a specific error cluster',

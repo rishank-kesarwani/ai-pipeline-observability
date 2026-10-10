@@ -6,18 +6,26 @@ import { api } from '../lib/api';
 
 interface AuditTrailViewProps {
   onSelectExecution: (id: string) => void;
+  user?: any;
+  onOpenAuth?: () => void;
 }
 
 export const AuditTrailView: React.FC<AuditTrailViewProps> = ({
   onSelectExecution,
+  user,
+  onOpenAuth,
 }) => {
   const [logs, setLogs] = useState<any[]>([]);
   const [recoveries, setRecoveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const loadData = async () => {
     try {
@@ -34,6 +42,32 @@ export const AuditTrailView: React.FC<AuditTrailViewProps> = ({
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="space-y-6">
+        <div className="glass-panel rounded-xl p-8 border border-amber-500/30 text-center max-w-xl mx-auto my-12 bg-amber-500/5">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="w-6 h-6" />
+          </div>
+          <h2 className="text-base font-bold text-white mb-2">
+            Privileged Operator Authorization Required
+          </h2>
+          <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+            The Audit Trail records sensitive operator signatures, recovery replay authorisations, and policy modifications. Anonymous demo access is restricted from viewing privileged audit history.
+          </p>
+          {onOpenAuth && (
+            <button
+              onClick={onOpenAuth}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition-all shadow-md shadow-emerald-600/20"
+            >
+              Sign In as Operator
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -295,12 +296,39 @@ export class ExecutionsService {
     return { execution: updatedExecution!, steps };
   }
 
-  async findAll(filter: ExecutionFilterDto) {
+  async findAll(filter: ExecutionFilterDto, user?: any) {
     const limit = filter.limit ? Number(filter.limit) : 20;
     const offset = filter.offset ? Number(filter.offset) : 0;
 
+    // Tenant Isolation:
+    // If anonymous/guest, strictly limit to public demo data (tenantId: 'default')
+    let effectiveTenantId = 'default';
+    if (user && !user.isAnonymous) {
+      if (user.roles?.includes('admin') || user.roles?.includes('operator')) {
+        // Operators can filter by specified tenant or view default
+        effectiveTenantId = filter.tenantId || user.tenantId || 'default';
+      } else {
+        // Regular user is strictly bound to own tenant
+        if (filter.tenantId && filter.tenantId !== user.tenantId) {
+          throw new ForbiddenException(
+            `Cross-tenant access forbidden. You cannot access tenant '${filter.tenantId}'`,
+          );
+        }
+        effectiveTenantId = user.tenantId || 'default';
+      }
+    } else {
+      // Guest attempted to request private tenant data
+      if (filter.tenantId && filter.tenantId !== 'default') {
+        throw new ForbiddenException(
+          'Anonymous visitors are restricted to public demo executions. Please sign in.',
+        );
+      }
+      effectiveTenantId = 'default';
+    }
+
     try {
       const query: any = {};
+      if (effectiveTenantId) query.tenantId = effectiveTenantId;
       if (filter.project) query.project = filter.project;
       if (filter.workflowId) query.workflowId = filter.workflowId;
       if (filter.status) query.status = filter.status;
@@ -337,6 +365,7 @@ export class ExecutionsService {
     const all = this.memoryStore.find<Execution>(
       'executions',
       (e) => {
+        if (effectiveTenantId && (e.tenantId || 'default') !== effectiveTenantId) return false;
         if (filter.project && e.project !== filter.project) return false;
         if (filter.workflowId && e.workflowId !== filter.workflowId) return false;
         if (filter.status && e.status !== filter.status) return false;
@@ -359,10 +388,27 @@ export class ExecutionsService {
     return { items: paginated, total: all.length, limit, offset };
   }
 
-  async findOne(executionId: string) {
+  async findOne(executionId: string, user?: any) {
     const execution = await this.findOneExecution(executionId);
     if (!execution) {
       throw new NotFoundException(`Execution '${executionId}' not found`);
+    }
+
+    const execTenant = execution.tenantId || 'default';
+
+    // Verify tenant ownership
+    if (!user || user.isAnonymous) {
+      if (execTenant !== 'default') {
+        throw new ForbiddenException(
+          'Anonymous visitors are restricted to public demo traces. Please sign in.',
+        );
+      }
+    } else if (!user.roles?.includes('admin') && !user.roles?.includes('operator')) {
+      if (execTenant !== user.tenantId && execTenant !== 'default') {
+        throw new ForbiddenException(
+          `Access denied to execution belonging to tenant '${execTenant}'`,
+        );
+      }
     }
 
     const steps = await this.findStepsForExecution(executionId);
@@ -384,8 +430,8 @@ export class ExecutionsService {
     };
   }
 
-  async getTimeline(executionId: string) {
-    const { execution, steps } = await this.findOne(executionId);
+  async getTimeline(executionId: string, user?: any) {
+    const { execution, steps } = await this.findOne(executionId, user);
     const stepMap = new Map<string, any>();
 
     // Build step tree with parent-child links

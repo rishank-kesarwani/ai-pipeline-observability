@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Workflow, WorkflowDocument } from '../database/schemas/workflow.schema';
@@ -41,11 +41,32 @@ export class WorkflowsService {
     }
   }
 
-  async findAll(query?: { project?: string; tenantId?: string }): Promise<Workflow[]> {
+  async findAll(query?: { project?: string; tenantId?: string }, user?: any): Promise<Workflow[]> {
+    let effectiveTenantId = 'default';
+    if (user && !user.isAnonymous) {
+      if (user.roles?.includes('admin') || user.roles?.includes('operator')) {
+        effectiveTenantId = query?.tenantId || user.tenantId || 'default';
+      } else {
+        if (query?.tenantId && query.tenantId !== user.tenantId) {
+          throw new ForbiddenException(
+            `Cross-tenant access forbidden. You cannot access tenant '${query.tenantId}'`,
+          );
+        }
+        effectiveTenantId = user.tenantId || 'default';
+      }
+    } else {
+      if (query?.tenantId && query.tenantId !== 'default') {
+        throw new ForbiddenException(
+          'Anonymous visitors are restricted to public demo workflows. Please sign in.',
+        );
+      }
+      effectiveTenantId = 'default';
+    }
+
     try {
       const filter: any = {};
       if (query?.project) filter.project = query.project;
-      if (query?.tenantId) filter.tenantId = query.tenantId;
+      if (effectiveTenantId) filter.tenantId = effectiveTenantId;
       const list = await this.workflowModel.find(filter).sort({ createdAt: -1 });
       if (list && list.length > 0) return list;
     } catch {
@@ -56,28 +77,48 @@ export class WorkflowsService {
       'workflows',
       (w) => {
         if (query?.project && w.project !== query.project) return false;
-        if (query?.tenantId && w.tenantId !== query.tenantId) return false;
+        if (effectiveTenantId && (w.tenantId || 'default') !== effectiveTenantId) return false;
         return true;
       },
       (a, b) => ((b.createdAt || 0) > (a.createdAt || 0) ? 1 : -1),
     );
   }
 
-  async findOne(workflowId: string): Promise<Workflow> {
+  async findOne(workflowId: string, user?: any): Promise<Workflow> {
+    let foundItem: Workflow | null = null;
     try {
       const found = await this.workflowModel.findOne({ workflowId });
-      if (found) return found;
+      if (found) foundItem = found;
     } catch {
       // Use fallback
     }
 
-    const memItem = this.memoryStore.findOne<Workflow>(
-      'workflows',
-      (w) => w.workflowId === workflowId,
-    );
-    if (!memItem) {
+    if (!foundItem) {
+      foundItem = this.memoryStore.findOne<Workflow>(
+        'workflows',
+        (w) => w.workflowId === workflowId,
+      );
+    }
+
+    if (!foundItem) {
       throw new NotFoundException(`Workflow '${workflowId}' not found`);
     }
-    return memItem;
+
+    const itemTenant = foundItem.tenantId || 'default';
+    if (!user || user.isAnonymous) {
+      if (itemTenant !== 'default') {
+        throw new ForbiddenException(
+          'Anonymous visitors are restricted to public demo workflows. Please sign in.',
+        );
+      }
+    } else if (!user.roles?.includes('admin') && !user.roles?.includes('operator')) {
+      if (itemTenant !== user.tenantId && itemTenant !== 'default') {
+        throw new ForbiddenException(
+          `Access denied to workflow belonging to tenant '${itemTenant}'`,
+        );
+      }
+    }
+
+    return foundItem;
   }
 }

@@ -187,16 +187,32 @@ sequenceDiagram
      - Google API keys (`AIza...` -> `[REDACTED_GOOGLE_API_KEY]`)
      - Email PII -> `[REDACTED_EMAIL]`
      - Credit Card numbers -> `[REDACTED_CREDIT_CARD]`
-2. **Authentication & Public Mode**:
-   - Demo mode enables anonymous exploration of seeded scenarios and public workflows.
-   - Protected endpoints require authenticated JWT Bearer token or service key (`x-api-key`).
-   - Operator approvals and recovery policy modifications strictly require operator credentials.
-3. **Rate Limiting**:
-   - Per-IP and per-tenant rate limits enforced via `@nestjs/throttler`.
+2. **Dual-Switch Optional Public Access Architecture**:
+   - Built to mirror the Travel Planner public access model (`NEXT_PUBLIC_ACCESS_ENABLED` on frontend and `PUBLIC_ACCESS_ENABLED` on backend).
+   - **Authoritative Backend**: The backend is the sole source of truth for all authorization. Setting the frontend flag to `true` has zero impact on backend protection.
+   - **Strict Separation of Privilege**:
+     - *Anonymous Guest*: Confined to read-only demo telemetry in `tenantId: 'default'`. Can never initiate recoveries, approve replays, access cross-tenant records, or ingest execution data.
+     - *Service Caller*: Ingestion agents authenticate via `x-api-key` matching `SERVICE_API_KEY`. Public access mode never bypasses internal service authentication.
+     - *Operator / Admin*: Authenticated operators authenticate via JWT Bearer token and hold exclusive authorization to initiate and approve workflow recovery replays and inspect audit ledgers.
+3. **Rate Limiting & Abuse Prevention**:
+   - Per-IP rate limiting enforced via `@nestjs/throttler`.
+   - Request size limited to 1MB (`MAX_PAYLOAD_BYTES`).
+   - Generic external errors returned without stack traces, credentials, or internal prompts.
 
 ---
 
-## 6. Shared Service Integrations (Audited Contracts)
+## 6. Authorization Categories & Route Matrix
+
+| Category | Guard / Decorator | Required Credentials | Endpoints |
+| :--- | :--- | :--- | :--- |
+| **Public Infrastructure** | `@Public()` | None | `GET /health`<br/>`GET /health/live`<br/>`GET /health/ready`<br/>`POST /api/v1/auth/login`<br/>`POST /api/v1/auth/register`<br/>`POST /api/v1/auth/refresh`<br/>`GET /api/v1/auth/config` |
+| **Optional Demo Reads** | `@OptionalAuth()` | Allowed anonymously IF `PUBLIC_ACCESS_ENABLED=true`. Otherwise requires valid JWT. Strictly scoped to `tenantId: 'default'`. | `GET /api/v1/executions`<br/>`GET /api/v1/executions/:id`<br/>`GET /api/v1/executions/:id/timeline`<br/>`GET /api/v1/failures/clusters`<br/>`GET /api/v1/failures/clusters/:id`<br/>`GET /api/v1/comparisons`<br/>`GET /api/v1/workflows`<br/>`GET /api/v1/workflows/:id`<br/>`POST /api/v1/demo/seed`<br/>`POST /api/v1/demo/simulate-run` |
+| **Ingestion Mutations** | `ServiceOrOperatorGuard` | Valid `x-api-key` (timing-safe check against `SERVICE_API_KEY`) **OR** valid JWT with role `operator`/`admin`. | `POST /api/v1/executions`<br/>`POST /api/v1/executions/ingest`<br/>`POST /api/v1/executions/:id/steps`<br/>`POST /api/v1/checkpoints` |
+| **Operator Privileged** | `JwtAuthGuard` + `RolesGuard(['operator', 'admin'])` | Valid JWT Bearer token with operator or admin role. | `POST /api/v1/recoveries/initiate`<br/>`POST /api/v1/recoveries/:id/approve`<br/>`GET /api/v1/recoveries`<br/>`GET /api/v1/audit`<br/>`POST /api/v1/workflows` |
+
+---
+
+## 7. Shared Service Integrations (Audited Contracts)
 
 ### A. Shared AI Platform (`rishank-kesarwani/ai-platform`)
 - **Endpoint**: `POST /api/v1/ai/chat`
@@ -219,29 +235,60 @@ sequenceDiagram
 
 ---
 
-## 7. Deployment Configuration
+## 8. Deployment Configuration (Vercel & Render)
 
-### Render / Railway Settings
-- **Port Binding**: Respects `process.env.PORT` dynamically and binds server to `0.0.0.0`.
-- **Health Endpoint**: Stable `/health` endpoint returning HTTP 200 with JSON status payload.
-- **Redis Connection**: Supports verified public Redis URLs via `REDIS_URL` or localhost fallback.
-- **Dual-Mode Persistence**: Seamlessly uses MongoDB when connected, with automatic in-memory collection fallback during offline testing or local development.
+### Environment Variable Interaction Matrix
+
+| Variable | Deployment Platform | Runtime / Scope | Default | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| `NEXT_PUBLIC_ACCESS_ENABLED` | **Vercel** (Frontend) | Client Build-Time | `true` | Controls whether UI displays anonymous demo telemetry or shows operator sign-in gate. **Not a security boundary.** |
+| `NEXT_PUBLIC_API_URL` | **Vercel** (Frontend) | Client Build-Time | `https://ai-pipeline-observability.onrender.com/api/v1` | URL to backend API endpoint. |
+| `PUBLIC_ACCESS_ENABLED` | **Render** (Backend) | Server Runtime | `true` | **Authoritative security switch.** If `false`, rejects unauthenticated requests across all application endpoints with HTTP 401. |
+| `SERVICE_API_KEY` | **Render** (Backend) | Server Runtime | (Secret) | Shared service key for external AI agent pipelines ingesting telemetry. |
+
+> [!IMPORTANT]
+> Next.js variables starting with `NEXT_PUBLIC_` are embedded into the frontend bundle at **build time**. If you change `NEXT_PUBLIC_ACCESS_ENABLED` in Vercel, you must trigger a new deployment for the change to take effect. `PUBLIC_ACCESS_ENABLED` on Render is read dynamically at server startup and on each incoming HTTP request.
+
+### Configuring Vercel
+1. In your Vercel Project Settings under **Environment Variables**, configure:
+   - `NEXT_PUBLIC_ACCESS_ENABLED`: `true` (for public demo) or `false` (for private enterprise mode).
+   - `NEXT_PUBLIC_API_URL`: `https://ai-pipeline-observability.onrender.com/api/v1`
+2. Trigger a redeploy so the build picks up the new environment configuration.
+
+### Configuring Render
+1. In your Render Web Service under **Environment**, configure:
+   - `PUBLIC_ACCESS_ENABLED`: `true` (or `false` to restrict to signed-in operators only).
+   - `SERVICE_API_KEY`: A secure random secret string for pipeline ingestion.
+   - `JWT_ACCESS_SECRET` & `JWT_REFRESH_SECRET`: Secure random 32+ character secrets.
+2. Render automatically restarts the service with zero downtime.
 
 ---
 
-## 8. Verification & Test Commands
+## 9. Verification & Test Commands
 
 ### Run Unit & Integration Tests:
 ```bash
 npm test
 ```
-All 6 test suites and 15 tests pass:
+All 7 test suites and 29 tests pass:
 - Execution ingestion & metric rollups
 - Sensitive data redaction
 - Error normalization & failure classification
 - Durable checkpointing & safe resume
 - Resuming partially completed workflow without rerunning completed non-idempotent steps
 - Operator approval workflow & authentication
+- **Public access switch unit & integration suite**:
+  - `PUBLIC_ACCESS_ENABLED=true` permits anonymous reads to `/executions` in default tenant.
+  - `PUBLIC_ACCESS_ENABLED=false` denies anonymous requests with HTTP 401.
+  - Health and auth configuration endpoints remain unauthenticated in all modes.
+  - Malformed or invalid Bearer tokens are rejected with HTTP 401 even when public mode is enabled.
+  - Ingestion endpoints reject anonymous callers with HTTP 401 even when public mode is enabled.
+  - Ingestion permits valid `SERVICE_API_KEY` via `x-api-key`.
+  - Ingestion rejects invalid service key with HTTP 401.
+  - Ingestion permits authenticated operator JWT.
+  - Anonymous callers cannot initiate workflow recoveries (HTTP 401).
+  - Anonymous callers cannot query privileged audit logs (HTTP 401).
+  - Cross-tenant requests by anonymous guests are rejected with HTTP 403.
 
 ### Run Production Build:
 ```bash

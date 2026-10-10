@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Lock, Globe, ShieldCheck } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
 import { ExecutionsView } from '../components/ExecutionsView';
 import { ExecutionDetailView } from '../components/ExecutionDetailView';
@@ -35,6 +36,11 @@ export default function ObservabilityDashboard() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState<any>(null);
 
+  // Public Access Mode
+  const [publicAccessEnabled, setPublicAccessEnabled] = useState<boolean>(() => {
+    return process.env.NEXT_PUBLIC_ACCESS_ENABLED !== 'false';
+  });
+
   // Notification Banner
   const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(
     null,
@@ -44,9 +50,12 @@ export default function ObservabilityDashboard() {
   const [isSimulating, setIsSimulating] = useState(false);
 
   useEffect(() => {
-    loadData();
     checkAuth();
-  }, [selectedProject]);
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [selectedProject, user, publicAccessEnabled]);
 
   useEffect(() => {
     if (selectedExecutionId) {
@@ -67,6 +76,10 @@ export default function ObservabilityDashboard() {
       setClusters(clustersRes || []);
     } catch (err: any) {
       console.error('Failed to load observability data', err);
+      if (err?.response?.status === 401 && !user) {
+        // Backend denied anonymous access (PUBLIC_ACCESS_ENABLED=false)
+        setPublicAccessEnabled(false);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,8 +96,16 @@ export default function ObservabilityDashboard() {
 
   const checkAuth = async () => {
     try {
-      const res = await api.getMe();
-      if (res && res.userId) setUser(res);
+      const [userRes, configRes] = await Promise.allSettled([
+        api.getMe(),
+        api.getConfig(),
+      ]);
+      if (userRes.status === 'fulfilled' && userRes.value?.userId) {
+        setUser(userRes.value);
+      }
+      if (configRes.status === 'fulfilled' && typeof configRes.value?.publicAccessEnabled === 'boolean') {
+        setPublicAccessEnabled(configRes.value.publicAccessEnabled);
+      }
     } catch {
       // Anonymous visitor mode is fine
     }
@@ -95,6 +116,12 @@ export default function ObservabilityDashboard() {
     setTimeout(() => setBannerMessage(null), 5000);
   };
 
+  const handleLogout = () => {
+    api.logout();
+    setUser(null);
+    showBanner('Signed out successfully. Switched to guest session.', 'info');
+  };
+
   const handleSimulateRun = async () => {
     try {
       setIsSimulating(true);
@@ -103,7 +130,7 @@ export default function ObservabilityDashboard() {
       await loadData();
       setSelectedExecutionId(res.execution.executionId);
     } catch (err: any) {
-      showBanner('Failed to simulate run: ' + err.message, 'error');
+      showBanner('Failed to simulate run: ' + (err?.response?.data?.message || err.message), 'error');
     } finally {
       setIsSimulating(false);
     }
@@ -115,11 +142,16 @@ export default function ObservabilityDashboard() {
       showBanner('Demo workflows, failure scenarios, and checkpoints successfully re-seeded!', 'success');
       await loadData();
     } catch (err: any) {
-      showBanner('Failed to seed demo: ' + err.message, 'error');
+      showBanner('Failed to seed demo: ' + (err?.response?.data?.message || err.message), 'error');
     }
   };
 
   const handleInitiateRecovery = async (checkpointId?: string) => {
+    if (!user) {
+      showBanner('Operator authentication required to initiate workflow recovery.', 'error');
+      setShowAuthModal(true);
+      return;
+    }
     if (!detailData) return;
     try {
       const action = await api.initiateRecovery({
@@ -170,7 +202,9 @@ export default function ObservabilityDashboard() {
         onSeedDemo={handleSeedDemo}
         isSimulating={isSimulating}
         user={user}
+        publicAccessEnabled={publicAccessEnabled}
         onOpenAuth={() => setShowAuthModal(true)}
+        onLogout={handleLogout}
       />
 
       {/* Alert / Toast Banner */}
@@ -198,50 +232,104 @@ export default function ObservabilityDashboard() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        {/* If an execution is selected, show detail view */}
-        {selectedExecutionId && detailData ? (
-          <ExecutionDetailView
-            execution={detailData.execution}
-            steps={detailData.steps}
-            checkpoints={detailData.checkpoints}
-            recoveries={detailData.recoveries}
-            cluster={detailData.cluster}
-            onBack={() => setSelectedExecutionId(null)}
-            onOpenStepInspector={(step) => setInspectedStep(step)}
-            onInitiateRecovery={handleInitiateRecovery}
-            onApproveRecovery={(recId) => setPendingApprovalRecoveryId(recId)}
-          />
+        {/* If private mode and unauthenticated: Lockout Screen */}
+        {!user && !publicAccessEnabled ? (
+          <div className="glass-panel rounded-2xl p-10 max-w-lg mx-auto my-12 border border-white/10 text-center shadow-2xl bg-white/[0.02]">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-7 h-7" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">
+              Private Pipeline Deployment
+            </h2>
+            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+              Public demo access is disabled (<code className="text-amber-400 font-mono">PUBLIC_ACCESS_ENABLED=false</code>). 
+              An authenticated operator session is required to inspect execution traces, failure clusters, and recovery checkpoints.
+            </p>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 mx-auto"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Sign In with Operator Credentials</span>
+            </button>
+          </div>
         ) : (
           <>
-            {activeTab === 'executions' && (
-              <ExecutionsView
-                executions={executions}
-                onSelectExecution={(id) => setSelectedExecutionId(id)}
-                selectedExecutionId={selectedExecutionId || undefined}
-                isLoading={isLoading}
-                onRefresh={loadData}
-              />
+            {/* Honest Public Demo Banner */}
+            {!user && publicAccessEnabled && (
+              <div className="mb-6 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center space-x-2.5 text-cyan-200">
+                  <span className="p-1 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                    <Globe className="w-4 h-4" />
+                  </span>
+                  <span>
+                    <strong>Public Demo Mode (Read-Only):</strong> You are inspecting sample telemetry. Initiating recovery replays, modifying workflows, or viewing audit ledgers requires operator sign-in.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-semibold rounded-lg transition-all shrink-0"
+                >
+                  Operator Sign In
+                </button>
+              </div>
             )}
 
-            {activeTab === 'clusters' && (
-              <FailureClustersView
-                clusters={clusters}
-                onSelectExecution={(id) => setSelectedExecutionId(id)}
-                isLoading={isLoading}
+            {/* If an execution is selected, show detail view */}
+            {selectedExecutionId && detailData ? (
+              <ExecutionDetailView
+                execution={detailData.execution}
+                steps={detailData.steps}
+                checkpoints={detailData.checkpoints}
+                recoveries={detailData.recoveries}
+                cluster={detailData.cluster}
+                onBack={() => setSelectedExecutionId(null)}
+                onOpenStepInspector={(step) => setInspectedStep(step)}
+                onInitiateRecovery={handleInitiateRecovery}
+                onApproveRecovery={(recId) => {
+                  if (!user) {
+                    showBanner('Operator authentication required to review and approve side-effects.', 'error');
+                    setShowAuthModal(true);
+                    return;
+                  }
+                  setPendingApprovalRecoveryId(recId);
+                }}
               />
-            )}
+            ) : (
+              <>
+                {activeTab === 'executions' && (
+                  <ExecutionsView
+                    executions={executions}
+                    onSelectExecution={(id) => setSelectedExecutionId(id)}
+                    selectedExecutionId={selectedExecutionId || undefined}
+                    isLoading={isLoading}
+                    onRefresh={loadData}
+                  />
+                )}
 
-            {activeTab === 'compare' && (
-              <ComparisonDiffView
-                executions={executions}
-                onSelectExecution={(id) => setSelectedExecutionId(id)}
-              />
-            )}
+                {activeTab === 'clusters' && (
+                  <FailureClustersView
+                    clusters={clusters}
+                    onSelectExecution={(id) => setSelectedExecutionId(id)}
+                    isLoading={isLoading}
+                  />
+                )}
 
-            {activeTab === 'audit' && (
-              <AuditTrailView
-                onSelectExecution={(id) => setSelectedExecutionId(id)}
-              />
+                {activeTab === 'compare' && (
+                  <ComparisonDiffView
+                    executions={executions}
+                    onSelectExecution={(id) => setSelectedExecutionId(id)}
+                  />
+                )}
+
+                {activeTab === 'audit' && (
+                  <AuditTrailView
+                    onSelectExecution={(id) => setSelectedExecutionId(id)}
+                    user={user}
+                    onOpenAuth={() => setShowAuthModal(true)}
+                  />
+                )}
+              </>
             )}
           </>
         )}

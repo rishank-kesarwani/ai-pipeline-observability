@@ -233,6 +233,11 @@ export class BulkIngestExecutionDto {
 }
 
 export class ExecutionFilterDto {
+  @ApiPropertyOptional({ description: 'Filter by tenant ID' })
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

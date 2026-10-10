@@ -12,6 +12,9 @@ import {
   Flame,
   GitCompare,
   History,
+  LogOut,
+  Lock,
+  Globe,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -23,7 +26,9 @@ interface NavbarProps {
   onSeedDemo: () => void;
   isSimulating: boolean;
   user: any;
+  publicAccessEnabled: boolean;
   onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,7 +40,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSeedDemo,
   isSimulating,
   user,
+  publicAccessEnabled,
   onOpenAuth,
+  onLogout,
 }) => {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B0F17]/85 backdrop-blur-md">
@@ -86,6 +93,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
+            {/* Access Mode Pill */}
+            {user ? (
+              <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>{user.roles?.includes('operator') || user.roles?.includes('admin') ? 'Operator Active' : 'Authenticated'}</span>
+              </div>
+            ) : publicAccessEnabled ? (
+              <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[11px] font-mono">
+                <Globe className="w-3 h-3 text-cyan-400" />
+                <span>Demo (Read-Only)</span>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-mono">
+                <Lock className="w-3 h-3 text-amber-400" />
+                <span>Private Mode</span>
+              </div>
+            )}
+
             {/* Simulate Run Button */}
             <button
               onClick={onSimulateRun}
@@ -103,17 +128,34 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-[#111827] hover:bg-[#1F2937] border border-white/10 text-gray-300 hover:text-white text-xs font-medium transition-all"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Reset Scenarios</span>
+              <span className="hidden sm:inline">Reset</span>
             </button>
 
-            {/* Operator Auth Button */}
-            <button
-              onClick={onOpenAuth}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-all"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>{user ? user.name : 'Operator Access'}</span>
-            </button>
+            {/* Auth / User Control */}
+            {user ? (
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-200 text-xs font-medium">
+                  <User className="h-3.5 w-3.5 text-emerald-400" />
+                  <span className="max-w-[100px] truncate">{user.name || user.email}</span>
+                </div>
+                <button
+                  onClick={onLogout}
+                  title="Sign out"
+                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-300 text-xs font-medium transition-all"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-all shadow-sm shadow-emerald-500/10"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Operator Sign In</span>
+              </button>
+            )}
           </div>
         </div>
 

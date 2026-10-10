@@ -19,6 +19,52 @@ const apiClient = axios.create({
   },
 });
 
+// Request interceptor: Attach JWT Bearer token from localStorage
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+// Response interceptor: Handle 401 token refresh
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      typeof window !== 'undefined'
+    ) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          const res = await axios.post(`${API_BASE}/auth/refresh`, { refreshToken });
+          const newAccessToken = res.data?.accessToken;
+          if (newAccessToken) {
+            localStorage.setItem('accessToken', newAccessToken);
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return apiClient(originalRequest);
+          }
+        } catch {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+        }
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const api = {
   // Executions
   getExecutions: async (params?: Record<string, any>): Promise<{ items: Execution[]; total: number }> => {
@@ -119,5 +165,13 @@ export const api = {
   getConfig: async (): Promise<any> => {
     const res = await apiClient.get('/auth/config');
     return res.data;
+  },
+
+  logout: (): void => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
   },
 };
