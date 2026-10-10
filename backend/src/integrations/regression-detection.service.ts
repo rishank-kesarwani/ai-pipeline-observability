@@ -18,10 +18,11 @@ export class RegressionDetectionService {
   private readonly baseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>(
+    const rawBaseUrl = this.configService.get<string>(
       'app.modelRegression.baseUrl',
-      'https://model-regression.rishankkesharwani.com/api/v1',
+      'https://model-regression.rishankkesharwani.com',
     );
+    this.baseUrl = (rawBaseUrl || '').replace(/\/api\/v1\/?$/, '').replace(/\/v1\/?$/, '').replace(/\/+$/, '');
     this.apiKey = this.configService.get<string>(
       'app.modelRegression.apiKey',
       'dev-model-regression-key',
@@ -52,7 +53,7 @@ export class RegressionDetectionService {
 
     if (!isMockOrUnreachable) {
       try {
-        const res = await this.client.post('/evaluations', {
+        const res = await this.client.post('/api/v1/evaluations', {
           project: req.project,
           datasetId: req.datasetId || `${req.workflowId}-benchmark`,
           model: req.candidateModel,

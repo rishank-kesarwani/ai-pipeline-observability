@@ -28,10 +28,11 @@ export class AiPlatformService {
   private readonly baseUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>(
+    const rawBaseUrl = this.configService.get<string>(
       'app.aiPlatform.baseUrl',
-      'https://ai-platform.rishankkesharwani.com/api/v1',
+      'https://ai-platform.rishankkesharwani.com',
     );
+    this.baseUrl = (rawBaseUrl || '').replace(/\/api\/v1\/?$/, '').replace(/\/v1\/?$/, '').replace(/\/+$/, '');
     this.apiKey = this.configService.get<string>(
       'app.aiPlatform.apiKey',
       'dev-ai-platform-obs-key',
@@ -69,7 +70,7 @@ Timeline: ${JSON.stringify(req.traceTimeline)}
 
 Provide root-cause diagnosis and actionable recovery steps.`;
 
-        const res = await this.client.post('/ai/chat', {
+        const res = await this.client.post('/api/v1/ai/chat', {
           applicationId: 'ai-pipeline-observability',
           tenantId: 'observability-platform',
           message: prompt,

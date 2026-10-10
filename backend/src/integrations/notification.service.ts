@@ -25,10 +25,11 @@ export class NotificationService {
   private readonly frontendUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>(
+    const rawBaseUrl = this.configService.get<string>(
       'app.notificationService.baseUrl',
-      'https://notifications.rishankkesharwani.com/api/v1',
+      'https://notifications.rishankkesharwani.com',
     );
+    this.baseUrl = (rawBaseUrl || '').replace(/\/api\/v1\/?$/, '').replace(/\/v1\/?$/, '').replace(/\/+$/, '');
     this.apiKey = this.configService.get<string>(
       'app.notificationService.apiKey',
       'dev-notification-obs-key',

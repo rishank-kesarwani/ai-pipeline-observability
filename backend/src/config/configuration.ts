@@ -36,20 +36,20 @@ export default registerAs('app', () => ({
   },
 
   aiPlatform: {
-    baseUrl: process.env.AI_PLATFORM_BASE_URL || 'https://ai-platform.rishankkesharwani.com/api/v1',
+    baseUrl: process.env.AI_PLATFORM_BASE_URL || 'https://ai-platform.rishankkesharwani.com',
     apiKey: process.env.AI_PLATFORM_OBSERVABILITY_API_KEY || 'dev-ai-platform-obs-key',
     timeoutMs: parseInt(process.env.AI_PLATFORM_TIMEOUT_MS || '30000', 10),
   },
 
   notificationService: {
-    baseUrl: process.env.NOTIFICATION_SERVICE_BASE_URL || 'https://notifications.rishankkesharwani.com/api/v1',
+    baseUrl: process.env.NOTIFICATION_SERVICE_BASE_URL || 'https://notifications.rishankkesharwani.com',
     apiKey: process.env.NOTIFICATION_OBSERVABILITY_API_KEY || 'dev-notification-obs-key',
     timeoutMs: parseInt(process.env.NOTIFICATION_TIMEOUT_MS || '10000', 10),
     alertsEmail: process.env.ALERTS_RECIPIENT_EMAIL || 'alerts@observability.local',
   },
 
   modelRegression: {
-    baseUrl: process.env.MODEL_REGRESSION_BASE_URL || 'https://model-regression.rishankkesharwani.com/api/v1',
+    baseUrl: process.env.MODEL_REGRESSION_BASE_URL || 'https://model-regression.rishankkesharwani.com',
     apiKey: process.env.MODEL_REGRESSION_API_KEY || 'dev-model-regression-key',
     timeoutMs: parseInt(process.env.MODEL_REGRESSION_TIMEOUT_MS || '15000', 10),
   },
