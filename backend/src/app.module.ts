@@ -64,12 +64,14 @@ import { DemoModule } from './demo/demo.module';
           if (!isReachable) {
             logger.warn(`Local MongoDB not running on 27017. Spinning up embedded Mongo server for seamless local execution...`);
             try {
-              const { MongoMemoryServer } = await import('mongodb-memory-server');
+              // Dynamic runtime resolution to allow optional dev fallback without breaking production builds
+              const dynamicRequire = eval('require');
+              const { MongoMemoryServer } = dynamicRequire('mongodb-memory-server');
               const mongod = await MongoMemoryServer.create();
               uri = mongod.getUri() + 'ai_pipeline_observability';
               logger.log(`Embedded MongoDB initialized at ${uri}`);
             } catch (err: any) {
-              logger.error(`Failed to launch MongoMemoryServer: ${err.message}`);
+              logger.warn(`Embedded MongoDB memory server unavailable (${err.message}). Using configured URI.`);
             }
           }
         }
