@@ -43,9 +43,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-[1px] flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <div className="h-full w-full bg-[#0B0F17] rounded-xl flex items-center justify-center">
-                <Activity className="h-5 w-5 text-cyan-400" />
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-xl blur opacity-40 group-hover:opacity-75 transition duration-300"></div>
+              <div className="relative h-10 w-10 rounded-xl bg-[#0B0F17] p-1 border border-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+                <img
+                  src="/logo.png"
+                  alt="AI Pipeline Observability"
+                  className="h-full w-full object-cover rounded-lg"
+                />
               </div>
             </div>
             <div>

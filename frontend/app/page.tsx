@@ -248,8 +248,12 @@ export default function ObservabilityDashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-4 text-center text-xs text-gray-500 font-mono">
-        AI Pipeline Observability &amp; Recovery Platform • Enterprise LLMOps SRE Suite
+      <footer className="border-t border-white/5 py-6 text-center text-xs text-gray-500 font-mono flex flex-col items-center justify-center space-y-2">
+        <div className="flex items-center space-x-2">
+          <img src="/logo.png" alt="Logo" className="w-5 h-5 rounded object-cover shadow" />
+          <span className="font-semibold text-gray-400">AI Pipeline Observability &amp; Recovery Platform</span>
+        </div>
+        <p className="text-[11px] text-gray-600">Enterprise LLMOps SRE Suite • Automated Forensics &amp; Resilient Recovery</p>
       </footer>
 
       {/* Modals */}

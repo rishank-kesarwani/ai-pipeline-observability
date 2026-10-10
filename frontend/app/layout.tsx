@@ -5,6 +5,14 @@ export const metadata: Metadata = {
   title: 'AI Pipeline Observability & Recovery',
   description:
     'Enterprise platform for tracing multi-step AI executions, diagnosing typed failures, clustering error signatures, and safely resuming recoverable workflows.',
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({
