@@ -61,3 +61,13 @@ body {
 .glow-amber {
   box-shadow: 0 0 20px -5px rgba(245, 158, 11, 0.3);
 }
+
+/* Hide scrollbar utility for clean mobile horizontal tab swiping */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}

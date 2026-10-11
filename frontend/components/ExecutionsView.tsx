@@ -127,74 +127,74 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Executions */}
-        <div className="glass-panel rounded-xl p-4 relative overflow-hidden">
+        <div className="glass-panel rounded-xl p-3.5 sm:p-4 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">
               Total Runs
             </span>
-            <Activity className="h-4 w-4 text-blue-400" />
+            <Activity className="h-4 w-4 text-blue-400 shrink-0" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-white">{totalCount}</div>
-          <div className="mt-1 text-[11px] text-gray-400 flex items-center space-x-1">
+          <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-white truncate">{totalCount}</div>
+          <div className="mt-1 text-[10px] sm:text-[11px] text-gray-400 flex items-center space-x-1">
             <span className="text-emerald-400 font-medium">100% monitored</span>
           </div>
         </div>
 
         {/* Failure Rate */}
-        <div className="glass-panel rounded-xl p-4 relative overflow-hidden">
+        <div className="glass-panel rounded-xl p-3.5 sm:p-4 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">
               Failure Rate
             </span>
-            <Flame className="h-4 w-4 text-rose-400" />
+            <Flame className="h-4 w-4 text-rose-400 shrink-0" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-rose-400">
+          <div className="mt-2 text-xl sm:text-2xl font-bold font-mono text-rose-400 truncate">
             {failureRate}%
           </div>
-          <div className="mt-1 text-[11px] text-gray-400">
+          <div className="mt-1 text-[10px] sm:text-[11px] text-gray-400 truncate">
             {failedCount} of {totalCount} runs halted
           </div>
         </div>
 
         {/* Mean Latency */}
-        <div className="glass-panel rounded-xl p-4 relative overflow-hidden">
+        <div className="glass-panel rounded-xl p-3.5 sm:p-4 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">
               Avg Latency
             </span>
-            <Clock className="h-4 w-4 text-amber-400" />
+            <Clock className="h-4 w-4 text-amber-400 shrink-0" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-white">
+          <div className="mt-2 text-lg xs:text-xl sm:text-2xl font-bold font-mono text-white truncate">
             {avgLatency} <span className="text-xs text-gray-400 font-sans font-normal">ms</span>
           </div>
-          <div className="mt-1 text-[11px] text-gray-400">Step execution average</div>
+          <div className="mt-1 text-[10px] sm:text-[11px] text-gray-400 truncate">Step execution average</div>
         </div>
 
         {/* Total Cost */}
-        <div className="glass-panel rounded-xl p-4 relative overflow-hidden">
+        <div className="glass-panel rounded-xl p-3.5 sm:p-4 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">
               Cost (USD)
             </span>
-            <Coins className="h-4 w-4 text-emerald-400" />
+            <Coins className="h-4 w-4 text-emerald-400 shrink-0" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-emerald-400">
+          <div className="mt-2 text-lg xs:text-xl sm:text-2xl font-bold font-mono text-emerald-400 truncate">
             ${totalCost.toFixed(4)}
           </div>
-          <div className="mt-1 text-[11px] text-gray-400">Estimated token pricing</div>
+          <div className="mt-1 text-[10px] sm:text-[11px] text-gray-400 truncate">Estimated token pricing</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="glass-panel rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="glass-panel rounded-xl p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search execution ID, workflow, error message..."
+            placeholder="Search execution ID, workflow, error..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-[#0B0F17] border border-white/10 rounded-lg text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
@@ -202,15 +202,15 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
         </div>
 
         {/* Filters */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           {/* Status Filter */}
-          <div className="flex items-center space-x-1.5">
-            <Filter className="w-3.5 h-3.5 text-gray-400" />
+          <div className="flex items-center space-x-1.5 flex-1 sm:flex-initial">
+            <Filter className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             <select
               aria-label="Filter by execution status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#0B0F17] border border-white/10 text-gray-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500/50"
+              className="w-full sm:w-auto bg-[#0B0F17] border border-white/10 text-gray-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500/50 cursor-pointer"
             >
               <option value="ALL">All Statuses</option>
               <option value="FAILED">FAILED</option>
@@ -225,7 +225,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
             aria-label="Filter by failure category"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-[#0B0F17] border border-white/10 text-gray-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500/50"
+            className="flex-1 sm:flex-initial bg-[#0B0F17] border border-white/10 text-gray-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500/50 cursor-pointer"
           >
             <option value="ALL">All Error Classes</option>
             <option value="TIMEOUT">TIMEOUT</option>
@@ -238,7 +238,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
 
           <button
             onClick={onRefresh}
-            className="px-2.5 py-1.5 bg-[#0B0F17] border border-white/10 hover:border-white/20 rounded-lg text-xs text-gray-300 transition-all"
+            className="px-3 py-1.5 bg-[#0B0F17] border border-white/10 hover:border-white/20 rounded-lg text-xs text-gray-300 hover:text-white transition-all shrink-0 ml-auto sm:ml-0"
             title="Refresh feed"
           >
             Refresh
@@ -248,17 +248,17 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
 
       {/* Execution List / Table */}
       <div className="glass-panel rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-          <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
+        <div className="px-4 sm:px-5 py-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+          <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider shrink-0">
             Execution Traces ({filtered.length})
           </h2>
-          <span className="text-[11px] text-gray-500 font-mono">
+          <span className="hidden sm:inline text-[11px] text-gray-500 font-mono">
             Click any execution to inspect flamegraph & checkpoints
           </span>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-8 sm:p-12 text-center">
             <Activity className="w-8 h-8 text-gray-600 mx-auto mb-3" />
             <p className="text-sm text-gray-400">No execution traces match your filters.</p>
             <p className="text-xs text-gray-500 mt-1">
@@ -273,43 +273,43 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
                 <div
                   key={exec.executionId}
                   onClick={() => onSelectExecution(exec.executionId)}
-                  className={`p-4 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+                  className={`p-3.5 sm:p-4 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                     isSelected
                       ? 'bg-blue-600/10 border-l-4 border-l-blue-500'
                       : 'hover:bg-white/[0.02]'
                   }`}
                 >
                   {/* Left: Status & Workflow info */}
-                  <div className="flex items-start space-x-3 min-w-0 flex-1">
-                    <div className="pt-0.5">{getStatusBadge(exec.status)}</div>
+                  <div className="flex items-start space-x-2.5 sm:space-x-3 min-w-0 flex-1">
+                    <div className="pt-0.5 shrink-0">{getStatusBadge(exec.status)}</div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-semibold text-white truncate">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-none">
                           {exec.workflowName}
                         </span>
                         <span className="text-[11px] font-mono text-gray-400">
                           {exec.executionId}
                         </span>
                         {exec.isRecovered && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                            Resumed from Checkpoint
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            Resumed
                           </span>
                         )}
                       </div>
 
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-gray-400">
                         <span className="text-blue-400 font-medium font-mono text-[11px]">
                           {exec.project}
                         </span>
                         <span>•</span>
                         <span className="flex items-center space-x-1">
-                          <Clock className="w-3 h-3 text-gray-500" />
+                          <Clock className="w-3 h-3 text-gray-500 shrink-0" />
                           <span>{exec.durationMs}ms</span>
                         </span>
                         <span>•</span>
                         <span className="flex items-center space-x-1">
-                          <Cpu className="w-3 h-3 text-gray-500" />
+                          <Cpu className="w-3 h-3 text-gray-500 shrink-0" />
                           <span>{exec.totalTokens.toLocaleString()} tokens</span>
                         </span>
                         <span>•</span>
@@ -328,9 +328,9 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
 
                       {/* Error snippet if failed */}
                       {exec.failureCategory && (
-                        <div className="mt-2 flex items-center space-x-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
                           {getCategoryBadge(exec.failureCategory)}
-                          <span className="text-[11px] text-rose-300/90 font-mono truncate max-w-xl">
+                          <span className="text-[11px] text-rose-300/90 font-mono truncate max-w-full">
                             {exec.errorSignature || 'Execution failure detected'}
                           </span>
                         </div>
@@ -339,7 +339,7 @@ export const ExecutionsView: React.FC<ExecutionsViewProps> = ({
                   </div>
 
                   {/* Right: Action button */}
-                  <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
+                  <div className="flex items-center space-x-2 shrink-0 self-start md:self-center pt-1 md:pt-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

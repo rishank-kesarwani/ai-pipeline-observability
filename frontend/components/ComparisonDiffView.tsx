@@ -78,8 +78,8 @@ export const ComparisonDiffView: React.FC<ComparisonDiffViewProps> = ({
           </div>
 
           {/* Selectors */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
+            <div className="flex-1 min-w-0">
               <label className="block text-[10px] uppercase font-mono text-gray-400 mb-1">
                 Base Run (Baseline / Success):
               </label>
@@ -87,7 +87,7 @@ export const ComparisonDiffView: React.FC<ComparisonDiffViewProps> = ({
                 aria-label="Select base execution run"
                 value={baseRunId}
                 onChange={(e) => setBaseRunId(e.target.value)}
-                className="bg-[#0B0F17] border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-[#0B0F17] border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50 truncate"
               >
                 {executions.map((e) => (
                   <option key={e.executionId} value={e.executionId}>
@@ -97,9 +97,9 @@ export const ComparisonDiffView: React.FC<ComparisonDiffViewProps> = ({
               </select>
             </div>
 
-            <div className="text-gray-500 font-bold self-end pb-2">vs</div>
+            <div className="text-gray-500 font-bold self-center sm:self-end sm:pb-2 text-xs">vs</div>
 
-            <div>
+            <div className="flex-1 min-w-0">
               <label className="block text-[10px] uppercase font-mono text-gray-400 mb-1">
                 Target Run (Failed / Candidate):
               </label>
@@ -107,7 +107,7 @@ export const ComparisonDiffView: React.FC<ComparisonDiffViewProps> = ({
                 aria-label="Select target execution run"
                 value={targetRunId}
                 onChange={(e) => setTargetRunId(e.target.value)}
-                className="bg-[#0B0F17] border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-[#0B0F17] border border-white/10 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500/50 truncate"
               >
                 {executions.map((e) => (
                   <option key={e.executionId} value={e.executionId}>

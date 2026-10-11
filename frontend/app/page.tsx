@@ -209,9 +209,9 @@ export default function ObservabilityDashboard() {
 
       {/* Alert / Toast Banner */}
       {bannerMessage && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4 animate-in slide-in-from-top duration-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full mt-3 sm:mt-4 animate-in slide-in-from-top duration-200">
           <div
-            className={`p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between shadow-lg ${
+            className={`p-3 sm:p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between shadow-lg ${
               bannerMessage.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                 : bannerMessage.type === 'error'
@@ -219,10 +219,10 @@ export default function ObservabilityDashboard() {
                 : 'bg-blue-500/10 border-blue-500/30 text-blue-300'
             }`}
           >
-            <span>{bannerMessage.text}</span>
+            <span className="truncate pr-2">{bannerMessage.text}</span>
             <button
               onClick={() => setBannerMessage(null)}
-              className="ml-4 text-gray-400 hover:text-white"
+              className="ml-2 text-gray-400 hover:text-white shrink-0 text-[11px]"
             >
               Dismiss
             </button>
@@ -231,14 +231,14 @@ export default function ObservabilityDashboard() {
       )}
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 w-full">
         {/* If private mode and unauthenticated: Lockout Screen */}
         {!user && !publicAccessEnabled ? (
-          <div className="glass-panel rounded-2xl p-10 max-w-lg mx-auto my-12 border border-white/10 text-center shadow-2xl bg-white/[0.02]">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-7 h-7" />
+          <div className="glass-panel rounded-2xl p-6 sm:p-10 max-w-lg mx-auto my-8 sm:my-12 border border-white/10 text-center shadow-2xl bg-white/[0.02]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-2">
               Private Pipeline Deployment
             </h2>
             <p className="text-xs text-gray-400 mb-6 leading-relaxed">
@@ -247,7 +247,7 @@ export default function ObservabilityDashboard() {
             </p>
             <button
               onClick={() => setShowAuthModal(true)}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 mx-auto"
+              className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 mx-auto"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Sign In with Operator Credentials</span>
@@ -257,18 +257,18 @@ export default function ObservabilityDashboard() {
           <>
             {/* Honest Public Demo Banner */}
             {!user && publicAccessEnabled && (
-              <div className="mb-6 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center space-x-2.5 text-cyan-200">
-                  <span className="p-1 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+              <div className="mb-4 sm:mb-6 p-3.5 sm:p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-start sm:items-center space-x-2.5 text-cyan-200">
+                  <span className="p-1 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shrink-0 mt-0.5 sm:mt-0">
                     <Globe className="w-4 h-4" />
                   </span>
-                  <span>
+                  <span className="leading-relaxed">
                     <strong>Public Demo Mode (Read-Only):</strong> You are inspecting sample telemetry. Initiating recovery replays, modifying workflows, or viewing audit ledgers requires operator sign-in.
                   </span>
                 </div>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-semibold rounded-lg transition-all shrink-0"
+                  className="w-full sm:w-auto text-center px-3.5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-semibold rounded-lg transition-all shrink-0"
                 >
                   Operator Sign In
                 </button>

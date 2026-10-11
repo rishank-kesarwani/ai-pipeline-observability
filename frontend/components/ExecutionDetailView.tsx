@@ -84,11 +84,11 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
       </div>
 
       {/* Main Execution Summary Header */}
-      <div className="glass-panel rounded-xl p-5 relative overflow-hidden">
+      <div className="glass-panel rounded-xl p-4 sm:p-5 relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-bold text-white tracking-tight">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                 {execution.workflowName}
               </h1>
               <span
@@ -111,7 +111,7 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
               )}
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+            <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-400">
               <span className="font-mono text-gray-300">
                 Workflow: {execution.workflowId}
               </span>
@@ -131,22 +131,22 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
           </div>
 
           {/* Quick Metrics */}
-          <div className="flex items-center space-x-4 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/5">
-            <div className="text-right">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wider">Duration</div>
-              <div className="text-base font-bold font-mono text-white">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 border-white/5 w-full lg:w-auto">
+            <div className="text-left sm:text-right">
+              <div className="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">Duration</div>
+              <div className="text-sm sm:text-base font-bold font-mono text-white truncate">
                 {execution.durationMs}ms
               </div>
             </div>
-            <div className="text-right border-l border-white/10 pl-4">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wider">Total Tokens</div>
-              <div className="text-base font-bold font-mono text-cyan-400">
+            <div className="text-left sm:text-right border-l border-white/10 pl-2.5 sm:pl-4">
+              <div className="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">Total Tokens</div>
+              <div className="text-sm sm:text-base font-bold font-mono text-cyan-400 truncate">
                 {execution.totalTokens.toLocaleString()}
               </div>
             </div>
-            <div className="text-right border-l border-white/10 pl-4">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wider">Est. Cost</div>
-              <div className="text-base font-bold font-mono text-emerald-400">
+            <div className="text-left sm:text-right border-l border-white/10 pl-2.5 sm:pl-4">
+              <div className="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">Est. Cost</div>
+              <div className="text-sm sm:text-base font-bold font-mono text-emerald-400 truncate">
                 ${execution.estimatedCostUsd?.toFixed(4)}
               </div>
             </div>
@@ -155,9 +155,9 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
 
         {/* If Execution is Failed: Primary Recovery CTA */}
         {execution.status === 'FAILED' && (
-          <div className="mt-4 pt-4 border-t border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-rose-500/5 -mx-5 -mb-5 px-5 py-3">
-            <div className="flex items-center space-x-2 text-rose-300 text-xs">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="mt-4 pt-4 border-t border-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-rose-500/5 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 p-3.5 sm:p-5">
+            <div className="flex items-start sm:items-center space-x-2 text-rose-300 text-xs">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5 sm:mt-0" />
               <span>
                 Workflow halted due to{' '}
                 <strong className="font-mono">{execution.failureCategory}</strong>. Durable
@@ -165,10 +165,10 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
               <button
                 onClick={() => onInitiateRecovery(selectedCheckpointId)}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-600/30 transition-all"
+                className="w-full sm:w-auto justify-center flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-600/30 transition-all shrink-0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Resume from Last Valid Checkpoint</span>
@@ -179,9 +179,9 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
 
         {/* Pending Operator Approval Banner */}
         {pendingApproval && (
-          <div className="mt-4 pt-4 border-t border-amber-500/30 bg-amber-500/10 -mx-5 -mb-5 px-5 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-amber-300 text-xs">
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="mt-4 pt-4 border-t border-amber-500/30 bg-amber-500/10 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center space-x-2 text-amber-300 text-xs">
+              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
               <span>
                 <strong>Action Required:</strong> A recovery replay contains non-idempotent
                 external side-effects ({pendingApproval.targetStepKey}). Human operator approval
@@ -191,7 +191,7 @@ export const ExecutionDetailView: React.FC<ExecutionDetailViewProps> = ({
 
             <button
               onClick={() => onApproveRecovery(pendingApproval.recoveryId)}
-              className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-xs rounded-lg transition-all"
+              className="w-full sm:w-auto text-center px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold text-xs rounded-lg transition-all shrink-0"
             >
               Review & Approve
             </button>
