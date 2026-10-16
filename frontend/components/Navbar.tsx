@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import {
   Activity,
   Play,
@@ -53,9 +54,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative group shrink-0">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-lg sm:rounded-xl blur opacity-40 group-hover:opacity-75 transition duration-300"></div>
               <div className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-[#0B0F17] p-0.5 sm:p-1 border border-white/10 flex items-center justify-center shadow-lg overflow-hidden">
-                <img
+                <Image
                   src="/logo.png"
                   alt="AI Pipeline Observability"
+                  width={40}
+                  height={40}
+                  unoptimized
+                  priority
                   className="h-full w-full object-cover rounded-md sm:rounded-lg"
                 />
               </div>
